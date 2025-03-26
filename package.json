@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "phaser": "^3.88.2"
+    "react-router-dom": "^7.4.0"
   }
 }

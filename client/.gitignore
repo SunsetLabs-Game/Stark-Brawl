@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Ignorar archivos de dependencias
+node_modules/
+package-lock.json
+yarn.lock
+client/package-lock.json
+.yarn-integrity
