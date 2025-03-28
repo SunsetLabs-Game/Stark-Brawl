@@ -37,8 +37,8 @@ images.cobblestone.src = 'assets/cobble-tile.png';
 images.grass.src = 'assets/grass-tile.png';
 images.bush.src = 'assets/bush-tile.png';
 images.crate.src = 'assets/crate-tile.png';
-images.player.src = 'assets/player-static.png';
-images.enemy.src = 'assets/enemy.png';
+images.player.src = 'client/public/nft4.png';
+images.enemy.src = 'client/public/nft3.png';
 
 // Game state variables
 let player;
