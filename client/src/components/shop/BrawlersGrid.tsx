@@ -8,7 +8,7 @@ interface BrawlersGridProps {
 
 const BrawlersGrid = ({ brawlers, onSelectBrawler }: BrawlersGridProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4">
       {brawlers.map((brawler) => (
         <BrawlerCard key={brawler.id} brawler={brawler} onClick={() => onSelectBrawler(brawler)} />
       ))}

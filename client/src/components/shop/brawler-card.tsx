@@ -5,6 +5,7 @@ import { PriceDisplay } from "./price-display";
 //import { ItemImage } from "./item-image";
 import { BrawlerImage } from "./brawler-image";
 import { getRarityBgColor, getRarityBorderColor } from "./utils/shop-utils";
+import { CountdownTimer } from "@/components/shop/CountdownTimer";
 
 interface BrawlerCardProps {
   brawler: ShopItem;
@@ -14,7 +15,7 @@ interface BrawlerCardProps {
 const BrawlerCard = ({ brawler, onClick }: BrawlerCardProps) => {
   return (
         <div
-      className={`bg-gradient-to-br ${getRarityBgColor(brawler.rarity)} rounded-xl overflow-hidden border-2 ${getRarityBorderColor(brawler.rarity)} hover:shadow-lg hover:shadow-pink-500/20 transition-all duration-300`}
+      className={`bg-gradient-to-br ${getRarityBgColor(brawler.rarity)} rounded-xl overflow-hidden border-2 ${getRarityBorderColor(brawler.rarity)} hover:shadow-lg hover:shadow-pink-500/20 transition-all duration-300 cursor-pointer`}
       onClick={onClick}
     >
       <div className="p-4">
@@ -34,7 +35,10 @@ const BrawlerCard = ({ brawler, onClick }: BrawlerCardProps) => {
             {brawler.isLimited && (
               <div className="bg-red-500/80 text-white text-xs px-2 py-0.5 rounded-full flex items-center">
                 <Clock className="h-3 w-3 mr-1" />
-                {brawler.timeRemaining}
+                <CountdownTimer 
+                  timeRemaining={brawler.timeRemaining  ?? "Expired"} 
+                  onExpire={() => console.log("⏱️ Expired:", brawler.name)} 
+                />
               </div>
             )}
           </div>

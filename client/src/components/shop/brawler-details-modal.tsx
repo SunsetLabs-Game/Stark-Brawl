@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { X, Info, Wallet, Clock } from "lucide-react";
@@ -7,6 +8,8 @@ import { PriceDisplay } from "./price-display";
 import { BrawlerImage } from "./brawler-image"; 
 import type { ShopItem } from "./@types/shop-types";
 import { getRarityBgColor, getRarityBorderColor } from "./utils/shop-utils";
+import { PurchaseConfirmationModal } from "./purchase-confimation-modal";
+import { CountdownTimer } from "@/components/shop/CountdownTimer";
 
 interface BrawlerDetailsModalProps {
   brawler: ShopItem | null;
@@ -21,11 +24,13 @@ export function BrawlerDetailsModal({
   onAddToCart,
   onBuyNow,
 }: BrawlerDetailsModalProps) {
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
   if (!brawler) return null;
 
   return (
     <AnimatePresence>
-      {brawler && (
+      <>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -44,7 +49,7 @@ export function BrawlerDetailsModal({
             ${getRarityBorderColor(brawler.rarity)}`}
             onClick={(e) => e.stopPropagation()} 
           >
-            {/* Cabecera (tags "NEW", "NFT", "LIMITED", botón cerrar) */}
+            {/* Header */}
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center">
                 {brawler.isNew && (
@@ -61,7 +66,10 @@ export function BrawlerDetailsModal({
                 {brawler.isLimited && (
                   <div className="bg-red-500/80 text-white text-xs px-2 py-0.5 rounded-full flex items-center">
                     <Clock className="h-3 w-3 mr-1" />
-                    {brawler.timeRemaining}
+                    <CountdownTimer 
+                         timeRemaining={brawler.timeRemaining  ?? "Expired"} 
+                          onExpire={() => console.log("⏱️ Expired:", brawler.name)} 
+                           />
                   </div>
                 )}
                 {brawler.rarity && (
@@ -90,22 +98,16 @@ export function BrawlerDetailsModal({
             </div>
 
             <div className="flex flex-col md:flex-row gap-6">
-              {/* Imagen a la izquierda */}
               <div className="md:w-1/2 flex justify-center">
                 <BrawlerImage brawler={brawler} size="lg" animate />
               </div>
 
-              {/* Título y descripción en la parte derecha */}
               <div className="md:w-1/2">
                 <h2 className="text-2xl font-bold text-white mb-2">
                   {brawler.name}
                 </h2>
                 <p className="text-white/80 mb-4">{brawler.description}</p>
 
-                {/* Si deseas repetir la descripción */}
-                {/* <p className="text-white/80 mb-4">{brawler.description}</p> */}
-
-                {/* Panel NFT si aplica */}
                 {brawler.isNFT && (
                   <div className="bg-blue-900/30 p-3 rounded-lg mb-4 border border-blue-500/30">
                     <div className="flex items-center mb-2">
@@ -113,14 +115,11 @@ export function BrawlerDetailsModal({
                       <h3 className="text-white font-bold">NFT Information</h3>
                     </div>
                     <p className="text-white/70 text-sm">
-                      This brawler is a unique NFT on the Starknet blockchain. 
-                      Once purchased, it will be transferred to your wallet and 
-                      can be traded on supported marketplaces.
+                      This brawler is a unique NFT on Starknet. Once purchased, it will be transferred to your wallet.
                     </p>
                   </div>
                 )}
 
-                {/* Sección de precio + botones */}
                 <div className="flex justify-between items-center mb-6">
                   <div className="text-lg font-bold text-white">Price:</div>
                   <PriceDisplay
@@ -142,7 +141,7 @@ export function BrawlerDetailsModal({
                   {onAddToCart && (
                     <Button
                       className="flex-1 bg-white/20 hover:bg-white/30 text-white border border-white/30"
-                      onClick={() => onAddToCart(brawler)}
+                      onClick={() => setShowConfirmModal(true)}
                     >
                       Add to Cart
                     </Button>
@@ -152,7 +151,19 @@ export function BrawlerDetailsModal({
             </div>
           </motion.div>
         </motion.div>
-      )}
+
+        {showConfirmModal && (
+          <PurchaseConfirmationModal
+            item={brawler}
+            onClose={() => setShowConfirmModal(false)}
+            onConfirm={(confirmedItem) => {
+              console.log("✅ Confirmed:", confirmedItem.name);
+              setShowConfirmModal(false);
+              onClose();
+            }}
+          />
+        )}
+      </>
     </AnimatePresence>
   );
 }
