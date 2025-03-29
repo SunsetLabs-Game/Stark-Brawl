@@ -3,6 +3,7 @@ import ShopPage from "./pages/shop"
 import SocialPage from "./pages/social"
 import EventsPage from "./pages/events"
 
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -11,6 +12,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/shop" replace />} />
         <Route path="/social" element={<SocialPage />} />
         <Route path="/events" element={<EventsPage />} />
+
       </Routes>
     </BrowserRouter>
   )
