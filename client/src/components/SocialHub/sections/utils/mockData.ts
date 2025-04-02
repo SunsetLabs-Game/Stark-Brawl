@@ -1,8 +1,7 @@
-
-import nft4 from "../../../../../public/nft4.png"
-import nft5 from "../../../../../public/nft5.png"
-import nft2 from "../../../../../public/nft2.png"
-import nft3 from "../../../../../public/nft3.png"
+import nft4 from "@/assets/nft4.png"
+import nft5 from "@/assets/nft5.png"
+import nft2 from "@/assets/nft2.png"
+import nft3 from "@/assets/nft3.png"
 
 export interface Clan {
   id: number;

@@ -12,7 +12,7 @@ const SocialHubLayout = () => {
 	const renderContent = () => {
 		switch (activeTab) {
 			case "friends":
-				return <Friends />;
+				return <Friends search={searchQuery} />;
 			case "requests":
 				return <Requests requests={requests} setRequests={setRequests} />;
 			case "messages":
@@ -20,7 +20,7 @@ const SocialHubLayout = () => {
 			case "clans":
 				return <Clans searchQuery={searchQuery} />;
 			default:
-				return <Friends />;
+				return <Friends search={searchQuery} />;
 		}
 	};
 
