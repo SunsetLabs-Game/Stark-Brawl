@@ -1,0 +1,28 @@
+body {
+    background-image: url('assets/cobble-tile.png');
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    image-rendering: pixelated; 
+    /* border: 2px solid #444; */
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+}
+
+#mapLayer {
+    z-index: 0;
+}
+
+#playerLayer {
+    z-index: 1;
+    pointer-events: none;
+}
