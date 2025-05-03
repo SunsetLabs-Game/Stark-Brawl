@@ -118,7 +118,7 @@ importers:
         specifier: ^18.3.5
         version: 18.3.6(@types/react@18.3.20)
       '@vitejs/plugin-react':
-        specifier: ^4.3.1
+        specifier: ^4.4.1
         version: 4.4.1(vite@5.4.18)
       autoprefixer:
         specifier: ^10.4.21
@@ -148,7 +148,7 @@ importers:
         specifier: ^8.7.0
         version: 8.31.1(eslint@9.25.1(jiti@1.21.7))(typescript@5.8.3)
       vite:
-        specifier: ^5.4.7
+        specifier: ^5.4.18
         version: 5.4.18
 
 packages:
