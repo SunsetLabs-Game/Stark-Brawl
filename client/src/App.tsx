@@ -10,6 +10,7 @@ import EventsPage from "@/pages/events";
 import BattlePass from "@/pages/battle-pass";
 import ClubPage from "@/pages/club-page";
 import PlayerProfile from "@/components/PlayerProfile/PlayerProfile";
+import GamePage from "./pages/game";
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
 
         <Route path="/brawlers" element={<Brawlers />} />
         <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/game" element={<GamePage />} />
       </Routes>
     </BrowserRouter>
   );
