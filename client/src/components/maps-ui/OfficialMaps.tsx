@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { OfficialMap } from "@/data/maps-data";
 import { ThumbsUp, Users, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface OfficialMapsProps {
 	maps: OfficialMap[];
@@ -16,6 +17,8 @@ const OfficialMaps: React.FC<OfficialMapsProps> = ({ maps }) => {
 		}),
 		exit: { opacity: 0, x: 20, transition: { duration: 0.2 } },
 	};
+
+	const navigate = useNavigate();
 
 	return (
 		<>
@@ -88,6 +91,11 @@ const OfficialMaps: React.FC<OfficialMapsProps> = ({ maps }) => {
 							<motion.button
 								whileHover={{ scale: 1.05 }}
 								whileTap={{ scale: 0.95 }}
+								onClick={() => {
+									if (map.name === "Lava Hell") {
+										navigate("/maps/index");
+									}
+								}}
 								className="px-3 py-2 bg-blue-600 text-white font-medium text-sm rounded-lg  w-full sm:w-max sm:self-end"
 							>
 								Play Now
