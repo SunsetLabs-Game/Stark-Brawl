@@ -126,6 +126,16 @@ export interface OfficialMap {
         players: null,
         image: Galactic,
       },
+      {
+        featured: true,
+        name: "Lava Hell",
+        mode: "Survival",
+        status: "Current",
+        likes: 9999,
+        dislikes: 100,
+        players: null,
+        image: Galactic,
+      },
     ],
     community: [
       {
