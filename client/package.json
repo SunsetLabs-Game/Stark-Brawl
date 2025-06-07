@@ -35,7 +35,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.4.0",
-    "starknet": "6.21.0",
+    "starknet": "^6.21.0",
     "starknetkit": "^2.10.4",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",

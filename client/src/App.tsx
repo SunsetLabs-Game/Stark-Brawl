@@ -11,6 +11,7 @@ import BattlePass from "@/pages/battle-pass";
 import ClubPage from "@/pages/club-page";
 import PlayerProfile from "@/components/PlayerProfile/PlayerProfile";
 import BattleLogPage from "./pages/battle-log";
+import MainGameScene from "./components/Map/Game";
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/club" element={<ClubPage />} />
         <Route path="/brawlers" element={<Brawlers />} />
         <Route path="/battle-log" element={<BattleLogPage />} />
+        <Route path="/game" element={<MainGameScene mapSrc="/game_background_1.png" enemyId={1} enemyInitialX={100} enemyInitialY={150}/>} />
         <Route path="/" element={<Navigate to="/home" replace />} />
       </Routes>
     </BrowserRouter>
