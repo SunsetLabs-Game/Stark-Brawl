@@ -10,6 +10,7 @@ import Nebula from "./Nebula.jpeg";
 import Neon from "./Neon.jpeg";
 import Quantum from "./Quantum.jpeg";
 import Shadow from "./Shadow.jpeg";
+import SnowyHighlands from "./SnowyHighlands.jpeg";
 import Solar from "./Solar.jpeg";
 import Stadium from "./Stadium.jpeg";
 import Starlight from "./Starlight.jpeg";
@@ -29,6 +30,7 @@ export {
   Neon,
   Quantum,
   Shadow,
+  SnowyHighlands,
   Solar,
   Stadium,
   Starlight,
