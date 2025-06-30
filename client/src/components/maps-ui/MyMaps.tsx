@@ -11,7 +11,8 @@ import {
   Copy,
 } from "lucide-react";
 import { useState } from "react";
-import ToxicSwampMap from "@/components/Maps/toxic-swamp-map/ToxicSwampMap";
+import SnowyHighlandsMap from "@/components/maps/snowy-highlands-map/SnowyHighlandsMap";
+import ToxicSwampMap from "@/components/maps/toxic-swamp-map/ToxicSwampMap";
 
 interface MyMapsProps {
   maps: MyMap[];
@@ -43,6 +44,29 @@ const MyMaps: React.FC<MyMapsProps> = ({ maps }) => {
     console.log("Tower placed:", tower);
     setTowers((prev) => [...prev, tower]);
   };
+
+  // If editing Snowy Highlands map, show the interactive component
+  if (editingMap?.name === "Snowy Highlands") {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white">Editing: Snowy Highlands</h2>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleCloseEdit}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium"
+          >
+            Close Editor
+          </motion.button>
+        </div>
+        <SnowyHighlandsMap 
+          onTowerPlace={handleTowerPlace}
+          className="bg-blue-600/20 p-4 rounded-lg"
+        />
+      </div>
+    );
+  }
 
   // If editing Toxic Swamp map, show the editor
   if (editingMap?.type === "ToxicSwamp") {
