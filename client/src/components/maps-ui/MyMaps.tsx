@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import SnowyHighlandsMap from "@/components/maps/snowy-highlands-map/SnowyHighlandsMap";
 import ToxicSwampMap from "@/components/maps/toxic-swamp-map/ToxicSwampMap";
+import { ForestWindmillMap } from "@/components/maps/forest-windmill-map/ForestWindmillMap";
 
 interface MyMapsProps {
   maps: MyMap[];
@@ -95,6 +96,11 @@ const MyMaps: React.FC<MyMapsProps> = ({ maps }) => {
 
   return (
     <>
+      {/* Forest Windmill Map Preview */}
+      <div className="mb-8">
+        <h2 className="text-lg font-bold mb-2">Forest Windmill Map (Custom)</h2>
+        <ForestWindmillMap />
+      </div>
       {maps.map((map, index) => (
         <motion.div
           key={map.name}
