@@ -6,14 +6,23 @@ pub struct Item {
     pub name: ByteArray,
     pub description: ByteArray,
     pub value: u16,
+    pub item_type: ItemType,
+    pub usable: bool,
+}
+
+#[derive(Copy, Drop, Serde, Debug, PartialEq)]
+pub enum ItemType {
+    Trap,
+    Upgrade,
+    Consumable
 }
 
 #[generate_trait]
 pub impl ItemImpl of ItemTrait {
     
     #[inline(always)]
-    fn new(id: u32, name: ByteArray, description: ByteArray, value: u16) -> Item {
-        Item { id, name, description, value, }
+    fn new(id: u32, name: ByteArray, description: ByteArray, value: u16, item_type: ItemType, usable: bool) -> Item {
+        Item { id, name, description, value, item_type, usable }
     }
 
     #[inline(always)]
@@ -24,11 +33,11 @@ pub impl ItemImpl of ItemTrait {
 
 #[cfg(test)]
 mod tests {
-    use super::{Item, ItemImpl};
+    use super::{Item, ItemImpl, ItemType};
 
     #[test]
     fn test_create_item() {
-        let item = ItemImpl::new(1, "sword", "a basic sword", 100);
+        let item = ItemImpl::new(1, "sword", "a basic sword", 100, ItemType::Upgrade, true);
 
         assert(item.id == 1, 'ID');
         assert(item.value == 100, 'VAL');
@@ -38,14 +47,14 @@ mod tests {
 
     #[test]
     fn test_update_value() {
-        let mut item = ItemImpl::new(2, "potion", "healing", 50);
+        let mut item = ItemImpl::new(2, "potion", "healing", 50, ItemType::Consumable, true);
         item.update_value(150);
         assert(item.value == 150, 'UPDVAL');
     }
 
     #[test]
     fn test_clone_item() {
-        let original = ItemImpl::new(5, "staff", "magic", 120);
+        let original = ItemImpl::new(5, "staff", "magic", 120, ItemType::Trap, true);
         let cloned = original.clone();
 
         assert(cloned.id == 5, 'IDCLONE');
@@ -56,8 +65,8 @@ mod tests {
 
     #[test]
     fn test_item_equality() {
-        let item1 = ItemImpl::new(10, "ring", "gold", 250);
-        let item2 = ItemImpl::new(10, "ring", "gold", 250);
+        let item1 = ItemImpl::new(10, "ring", "gold", 250, ItemType::Upgrade, true);
+        let item2 = ItemImpl::new(10, "ring", "gold", 250, ItemType::Upgrade, true);
 
         assert(item1.id == item2.id, 'EQID');
         assert(item1.name == item2.name, 'EQNAME');
@@ -67,8 +76,8 @@ mod tests {
 
     #[test]
     fn test_item_inequality() {
-        let item1 = ItemImpl::new(11, "shield", "iron", 300);
-        let item2 = ItemImpl::new(12, "shield", "steel", 300);
+        let item1 = ItemImpl::new(11, "shield", "iron", 300, ItemType::Upgrade, true);
+        let item2 = ItemImpl::new(12, "shield", "steel", 300, ItemType::Upgrade, true);
 
         assert(item1.id != item2.id, 'NEQID');
         assert(item1.description != item2.description, 'NEQDESC');
@@ -76,14 +85,14 @@ mod tests {
 
     #[test]
     fn test_zero_value_item() {
-        let item = ItemImpl::new(13, "rock", "useless", 0);
+        let item = ItemImpl::new(13, "rock", "useless", 0, ItemType::Upgrade, true);
 
         assert(item.value == 0, 'ZEROVAL');
     }
 
     #[test]
     fn test_update_value_multiple_times() {
-        let mut item = ItemImpl::new(15, "gem", "rare", 10);
+        let mut item = ItemImpl::new(15, "gem", "rare", 10, ItemType::Upgrade, true);
 
         item.update_value(20);
         assert(item.value == 20, 'VAL1');
