@@ -1,6 +1,15 @@
 use starknet::{ContractAddress, contract_address_const};
 use core::num::traits::zero::Zero;
 use core::option::Option;
+use stark_brawl::models::ability::Ability;
+
+#[derive(Copy, Drop, Serde, IntrospectPacked, Debug, PartialEq)]
+pub enum PlayerStatus {
+    Alive,
+    Dead,
+    InMatch,
+    Waiting,
+}
 
 #[derive(Copy, Drop, Serde, IntrospectPacked, Debug)]
 #[dojo::model]
@@ -61,6 +70,15 @@ pub impl PlayerImpl of PlayerTrait {
     fn spend_gems(ref self: Player, amount: u64) {
         assert(self.gems >= amount, 'Player: Not enough gems');
         self.gems -= amount;
+    }
+
+    // Add the missing status method
+    fn status(self: @Player) -> PlayerStatus {
+        if *self.hp > 0 {
+            PlayerStatus::Alive
+        } else {
+            PlayerStatus::Dead
+        }
     }
 }
 
@@ -124,7 +142,7 @@ pub fn spawn_player(address: ContractAddress) -> Player {
 
 #[cfg(test)]
 mod tests {
-    use super::{Player, ZeroablePlayerTrait, PlayerImpl, spawn_player, PlayerTrait};
+    use super::{Player, ZeroablePlayerTrait, PlayerImpl, spawn_player, PlayerTrait, PlayerStatus};
     use starknet::{ContractAddress, contract_address_const};
 
     #[test]
@@ -186,5 +204,14 @@ mod tests {
         player.spend_gems(5_u64);
         assert(player.coins == 60_u64, 'Coins not updated correctly');
         assert(player.gems == 15_u64, 'Gems not updated correctly');
+    }
+
+    #[test]
+    fn test_player_status() {
+        let addr: ContractAddress = contract_address_const::<0x456>();
+        let mut player = spawn_player(addr);
+        assert(player.status() == PlayerStatus::Alive, 'Should be alive');
+        player.take_damage(200);
+        assert(player.status() == PlayerStatus::Dead, 'Should be dead');
     }
 }

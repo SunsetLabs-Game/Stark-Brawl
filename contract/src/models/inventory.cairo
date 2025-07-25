@@ -1,8 +1,8 @@
 use core::array::ArrayTrait;
 use core::num::traits::zero::Zero;
+use starknet::ContractAddress;
 use stark_brawl::models::item::{Item, ItemImpl};
-
-const MAX_INVENTORY_CAPACITY: u32 = 30;
+use stark_brawl::constants::{MAX_INVENTORY_CAPACITY};
 
 pub mod errors {
     pub const INVENTORY_FULL: felt252 = 'Inventory is full';
@@ -14,7 +14,7 @@ pub mod errors {
 #[dojo::model]
 pub struct Inventory {
     #[key]
-    pub id: u32,
+    pub player_address: ContractAddress, // Changed from id: u32 to player_address: ContractAddress
     pub items: Array<Item>,
     pub max_capacity: u32,
     pub is_set: bool,
@@ -23,9 +23,12 @@ pub struct Inventory {
 #[generate_trait]
 pub impl InventoryImpl of InventoryTrait {
     // New inventory
-    fn new(id: u32) -> Inventory {
+    fn new(player_address: ContractAddress) -> Inventory {
         Inventory {
-            id, items: ArrayTrait::new(), max_capacity: MAX_INVENTORY_CAPACITY, is_set: true,
+            player_address,
+            items: ArrayTrait::new(),
+            max_capacity: MAX_INVENTORY_CAPACITY,
+            is_set: true,
         }
     }
 
@@ -97,7 +100,12 @@ pub impl InventoryAssert of AssertTrait {
 pub impl ZeroableInventoryTrait of Zero<Inventory> {
     #[inline(always)]
     fn zero() -> Inventory {
-        Inventory { id: 0, items: ArrayTrait::new(), max_capacity: 0, is_set: false }
+        Inventory {
+            player_address: starknet::contract_address_const::<0x0>(),
+            items: ArrayTrait::new(),
+            max_capacity: 0,
+            is_set: false,
+        }
     }
 
     #[inline(always)]
@@ -115,11 +123,13 @@ pub impl ZeroableInventoryTrait of Zero<Inventory> {
 mod tests {
     use super::{InventoryImpl, ItemImpl, MAX_INVENTORY_CAPACITY};
     use stark_brawl::models::item::ItemType;
+    use starknet::contract_address_const;
 
     #[test]
     fn test_new_inventory() {
-        let inventory = InventoryImpl::new(1);
-        assert(inventory.id == 1, 'Invalid inventory id');
+        let addr = contract_address_const::<0x123>();
+        let inventory = InventoryImpl::new(addr);
+        assert(inventory.player_address == addr, 'Invalid inventory address');
         assert(inventory.is_set == true, 'Should be set');
         assert(inventory.max_capacity == 30, 'Invalid max capacity');
         assert(inventory.items.len() == 0, 'Should start empty');
@@ -127,7 +137,8 @@ mod tests {
 
     #[test]
     fn test_add_item() {
-        let mut inventory = InventoryImpl::new(1);
+        let addr = contract_address_const::<0x123>();
+        let mut inventory = InventoryImpl::new(addr);
         let item = ItemImpl::new(1, "sword", "a basic sword", 100, ItemType::Upgrade, true);
 
         assert(inventory.add_item(item), 'Should add item');
@@ -136,7 +147,8 @@ mod tests {
 
     #[test]
     fn test_inventory_full() {
-        let mut inventory = InventoryImpl::new(1);
+        let addr = contract_address_const::<0x123>();
+        let mut inventory = InventoryImpl::new(addr);
 
         let test_item = ItemImpl::new(1, "sword", "a basic sword", 100, ItemType::Upgrade, true);
 
@@ -159,7 +171,8 @@ mod tests {
 
     #[test]
     fn test_remove_item() {
-        let mut inventory = InventoryImpl::new(1);
+        let addr = contract_address_const::<0x123>();
+        let mut inventory = InventoryImpl::new(addr);
         let item = ItemImpl::new(1, "sword", "a basic sword", 100, ItemType::Upgrade, true);
 
         inventory.add_item(item);
@@ -169,7 +182,8 @@ mod tests {
 
     #[test]
     fn test_available_space() {
-        let mut inventory = InventoryImpl::new(1);
+        let addr = contract_address_const::<0x123>();
+        let mut inventory = InventoryImpl::new(addr);
         let item = ItemImpl::new(1, "sword", "a basic sword", 100, ItemType::Upgrade, true);
 
         assert(inventory.available_space() == MAX_INVENTORY_CAPACITY, 'Should be empty');

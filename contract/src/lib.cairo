@@ -1,4 +1,6 @@
-pub mod systems {}
+pub mod systems {
+    pub mod game;
+}
 
 pub mod models {
     pub mod ticket;
@@ -18,14 +20,14 @@ pub mod models {
     pub mod tower;
     pub mod enemy;
     pub mod projectile;
-    pub mod enemy_path;
+    pub mod game_match;
 }
 
-mod store;
+pub mod constants;
+pub mod store;
 
 #[cfg(test)]
 pub mod tests {
     pub mod test_trap;
     pub mod test_map_tile;
 }
-
