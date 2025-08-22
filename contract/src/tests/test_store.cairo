@@ -20,7 +20,7 @@ mod tests {
     };
     use stark_brawl::store::{Store, StoreTrait};
     use starknet::{ContractAddress, contract_address_const};
-    use stark_brawl::models::player::{Player, PlayerImpl, spawn_player};
+    use stark_brawl::models::player::{Player, PlayerImpl, spawn_player, PlayerContract};
 
     // Systems and Dispatchers
     use stark_brawl::systems::game::{brawl_game, IBrawlGameDispatcher, IBrawlGameDispatcherTrait};
@@ -39,6 +39,7 @@ mod tests {
     use stark_brawl::models::player::{m_Player};
     use stark_brawl::models::statistics::{m_Statistics};
     use stark_brawl::models::leaderboard::{m_LeaderboardEntry};
+    use stark_brawl::models::player::{m_PlayerContract};
 
     pub fn namespace_def() -> NamespaceDef {
         let ndef = NamespaceDef {
@@ -54,6 +55,7 @@ mod tests {
                 TestResource::Model(m_Player::TEST_CLASS_HASH),
                 TestResource::Model(m_Statistics::TEST_CLASS_HASH),
                 TestResource::Model(m_LeaderboardEntry::TEST_CLASS_HASH),
+                TestResource::Model(m_PlayerContract::TEST_CLASS_HASH),
                 TestResource::Contract(brawl_game::TEST_CLASS_HASH),
                 TestResource::Contract(player_system::TEST_CLASS_HASH),
             ]
@@ -1295,6 +1297,176 @@ mod tests {
         assert!(
             store.is_wave_completed(wave.id), "Wave should be marked completed after completion",
         );
+    }
+
+    ///----------Player gems& Coins -----------------
+
+    #[test]
+    fn test_store_add_coins_to_player() {
+        let player_system_contract_address = create_test_player_system();
+        let mut world = create_test_world(player_system_contract_address);
+        let player_address = contract_address_const::<0x11111111>();
+        let data = PlayerContract {
+            id: 'PLAYER_CONTRACT', contract: player_system_contract_address,
+        };
+
+        world.write_model(@data);
+
+        let mut store: Store = StoreTrait::new(world);
+
+        let player = spawn_player(player_address);
+        store.write_player(@player);
+
+        // Initial coins should be 0
+        assert!(store.get_coins(player_address) == 0_u64, "Initial coins should be 0");
+
+        // Add 50 coins
+        store.add_coins(player_address, 50_u64);
+        assert!(store.get_coins(player_address) == 50_u64, "Player coins not updated after add");
+
+        // Add another 50 coins
+        store.add_coins(player_address, 50_u64);
+        assert!(
+            store.get_coins(player_address) == 100_u64, "Player coins not cumulative after add",
+        );
+    }
+
+    #[test]
+    fn test_store_spend_coins_valid() {
+        let player_system_contract_address = create_test_player_system();
+        let mut world = create_test_world(player_system_contract_address);
+        let player_address = contract_address_const::<0x22222222>();
+        let data = PlayerContract {
+            id: 'PLAYER_CONTRACT', contract: player_system_contract_address,
+        };
+
+        world.write_model(@data);
+
+        let mut store: Store = StoreTrait::new(world);
+
+        let player = spawn_player(player_address);
+        store.write_player(@player);
+
+        // Add 100 coins to spend later
+        store.add_coins(player_address, 100_u64);
+
+        // Spend exact amount: 100 coins (should leave zero)
+        store.spend_coins(player_address, 100_u64);
+        assert!(
+            store.get_coins(player_address) == 0_u64, "Coins should be zero after spending all",
+        );
+
+        // Add coins back for next spend
+        store.add_coins(player_address, 50_u64);
+        store.spend_coins(player_address, 50_u64);
+        assert!(
+            store.get_coins(player_address) == 0_u64, "Coins should be zero after spending all",
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_store_spend_coins_overspend_panics() {
+        let player_system_contract_address = create_test_player_system();
+        let mut world = create_test_world(player_system_contract_address);
+        let player_address = contract_address_const::<0x22222222>();
+        let data = PlayerContract {
+            id: 'PLAYER_CONTRACT', contract: player_system_contract_address,
+        };
+
+        world.write_model(@data);
+
+        let mut store: Store = StoreTrait::new(world);
+
+        let player = spawn_player(player_address);
+        store.write_player(@player);
+
+        // Add 50 coins
+        store.add_coins(player_address, 50_u64);
+
+        // Attempt to spend 60 coins which is more than the balance; should panic
+        store.spend_coins(player_address, 60_u64);
+    }
+
+    #[test]
+    fn test_store_add_gems_to_player() {
+        let player_system_contract_address = create_test_player_system();
+        let mut world = create_test_world(player_system_contract_address);
+        let player_address = contract_address_const::<0x33333333>();
+        let data = PlayerContract {
+            id: 'PLAYER_CONTRACT', contract: player_system_contract_address,
+        };
+
+        world.write_model(@data);
+
+        let mut store: Store = StoreTrait::new(world);
+
+        let player = spawn_player(player_address);
+        store.write_player(@player);
+
+        // Initial gems should be 0
+        assert!(store.get_gems(player_address) == 0_u64, "Initial gems should be 0");
+
+        // Add 30 gems
+        store.add_gems(player_address, 30_u64);
+        assert!(store.get_gems(player_address) == 30_u64, "Player gems not updated correctly");
+
+        // Add another 20 gems
+        store.add_gems(player_address, 20_u64);
+        assert!(store.get_gems(player_address) == 50_u64, "Player gems not cumulative after add");
+    }
+
+    #[test]
+    fn test_store_spend_gems_valid() {
+        let player_system_contract_address = create_test_player_system();
+        let mut world = create_test_world(player_system_contract_address);
+        let player_address = contract_address_const::<0x44444444>();
+        let data = PlayerContract {
+            id: 'PLAYER_CONTRACT', contract: player_system_contract_address,
+        };
+
+        world.write_model(@data);
+
+        let mut store: Store = StoreTrait::new(world);
+
+        let player = spawn_player(player_address);
+        store.write_player(@player);
+
+        // Add 70 gems
+        store.add_gems(player_address, 70_u64);
+
+        // Spend exact 70 gems (leave zero)
+        store.spend_gems(player_address, 70_u64);
+        assert!(store.get_gems(player_address) == 0_u64, "Gems should be zero after spending all");
+
+        // Add gems back for next spend
+        store.add_gems(player_address, 40_u64);
+        store.spend_gems(player_address, 40_u64);
+        assert!(store.get_gems(player_address) == 0_u64, "Gems should be zero after spending all");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_store_spend_gems_overspend_panics() {
+        let player_system_contract_address = create_test_player_system();
+        let mut world = create_test_world(player_system_contract_address);
+        let player_address = contract_address_const::<0x44444444>();
+        let data = PlayerContract {
+            id: 'PLAYER_CONTRACT', contract: player_system_contract_address,
+        };
+
+        world.write_model(@data);
+
+        let mut store: Store = StoreTrait::new(world);
+
+        let player = spawn_player(player_address);
+        store.write_player(@player);
+
+        // Add 40 gems
+        store.add_gems(player_address, 40_u64);
+
+        // Attempt to spend 50 gems which is more than the balance; should panic
+        store.spend_gems(player_address, 50_u64);
     }
 }
 

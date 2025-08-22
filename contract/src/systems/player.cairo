@@ -28,11 +28,10 @@ pub trait IPlayerSystem<T> {
 
 #[dojo::contract]
 pub mod player_system {
-    use starknet::{ContractAddress, get_caller_address};
+    use starknet::{ContractAddress};
     use starknet::storage::{
         Map, StoragePointerWriteAccess, StoragePathEntry, StoragePointerReadAccess,
     };
-    use dojo::world::IWorldDispatcherTrait;
     use super::IPlayerSystem;
 
     #[storage]

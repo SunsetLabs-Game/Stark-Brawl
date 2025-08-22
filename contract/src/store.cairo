@@ -5,7 +5,7 @@ use stark_brawl::models::item::Item;
 use stark_brawl::models::tower_stats::TowerStats;
 use stark_brawl::models::tower::{errors as TowerErrors, Tower, TowerImpl, ZeroableTower};
 use stark_brawl::models::trap::{Trap, TrapImpl, ZeroableTrapTrait, Vec2};
-use stark_brawl::models::player::{Player, PlayerImpl};
+use stark_brawl::models::player::{Player, PlayerContract, PlayerImpl};
 use stark_brawl::systems::player::{IPlayerSystemDispatcher, IPlayerSystemDispatcherTrait};
 use stark_brawl::models::wave::{errors as WaveErrors, Wave, WaveImpl, ZeroableWave};
 use stark_brawl::models::enemy::{Enemy, EnemyImpl, ZeroableEnemy};
@@ -14,6 +14,7 @@ use stark_brawl::models::leaderboard::{
     LeaderboardEntry, ILeaderboardEntry, ZeroableLeaderboardEntry,
 };
 use starknet::ContractAddress;
+use core::num::traits::Zero;
 
 #[derive(Drop)]
 pub struct Store {
@@ -85,13 +86,50 @@ pub impl StoreImpl of StoreTrait {
     // Player operations
     // -------------------------------
     #[inline]
-    fn read_player(self: @Store, player_id: felt252) -> Player {
-        self.world.read_model(player_id)
+    fn read_player(self: @Store, player_address: ContractAddress) -> Player {
+        self.world.read_model(player_address)
     }
 
     #[inline]
     fn write_player(ref self: Store, player: @Player) {
         self.world.write_model(player);
+    }
+
+    #[inline(always)]
+    fn player_system_client(self: @Store) -> IPlayerSystemDispatcher {
+        let contract: PlayerContract = self.world.read_model('PLAYER_CONTRACT');
+        assert!(contract.contract.is_non_zero(), "PlayerSystem_contract_not_configured");
+        IPlayerSystemDispatcher { contract_address: contract.contract }
+    }
+
+    #[inline]
+    fn add_coins(self: @Store, player_address: ContractAddress, amount: u64) {
+        self.player_system_client().add_coins(player_address, amount);
+    }
+
+    #[inline]
+    fn spend_coins(self: @Store, player_address: ContractAddress, amount: u64) {
+        self.player_system_client().spend_coins(player_address, amount);
+    }
+
+    #[inline]
+    fn add_gems(self: @Store, player_address: ContractAddress, amount: u64) {
+        self.player_system_client().add_gems(player_address, amount);
+    }
+
+    #[inline]
+    fn spend_gems(self: @Store, player_address: ContractAddress, amount: u64) {
+        self.player_system_client().spend_gems(player_address, amount);
+    }
+
+    #[inline]
+    fn get_coins(self: @Store, player_address: ContractAddress) -> u64 {
+        self.player_system_client().get_coins(player_address)
+    }
+
+    #[inline]
+    fn get_gems(self: @Store, player_address: ContractAddress) -> u64 {
+        self.player_system_client().get_gems(player_address)
     }
 
     // -------------------------------
@@ -355,7 +393,6 @@ pub impl StoreImpl of StoreTrait {
         enemy_id: u64,
         player_address: ContractAddress,
     ) {
-        let world = self.world;
         let mut enemy = self.read_enemy(enemy_id);
 
         assert(!enemy.is_alive, 'Enemy must be defeated');

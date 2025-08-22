@@ -11,6 +11,14 @@ pub struct Player {
     pub current_wave: u32,
 }
 
+#[derive(Copy, Drop, Serde, Debug)]
+#[dojo::model]
+pub struct PlayerContract {
+    #[key]
+    pub id: felt252,
+    pub contract: ContractAddress,
+}
+
 pub fn ZERO_ADDRESS() -> ContractAddress {
     contract_address_const::<0x0>()
 }

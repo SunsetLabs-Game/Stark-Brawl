@@ -29,7 +29,7 @@ pub mod brawl_game {
     use dojo::model::{ModelStorage};
 
 
-    use stark_brawl::models::player::{Player, PlayerTrait, spawn_player};
+    use stark_brawl::models::player::{Player, spawn_player};
     use stark_brawl::models::ability::{Ability};
     use stark_brawl::models::item::{Item, ItemType};
     use stark_brawl::models::inventory::{Inventory};
@@ -73,11 +73,10 @@ pub mod brawl_game {
         }
 
         fn take_damage(ref self: ContractState, amount: u32) {
-            let mut world = self.world_default();
-            let caller = get_caller_address();
+            // let mut world = self.world_default();
             let player_system_dispatcher = self.player_system_dispatcher();
 
-            player_system_dispatcher.take_damage(caller, amount.try_into().unwrap());
+            player_system_dispatcher.take_damage(get_caller_address(), amount.try_into().unwrap());
         }
 
         fn attack_enemy(ref self: ContractState, enemy_id: u64, damage: u32) {
@@ -110,7 +109,6 @@ pub mod brawl_game {
         }
 
         fn get_player_status(ref self: ContractState) -> PlayerStatus {
-            let world = self.world_default();
             let caller = get_caller_address();
             let player_system_dispatcher = self.player_system_dispatcher();
 
