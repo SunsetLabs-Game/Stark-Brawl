@@ -209,11 +209,100 @@ pub mod brawl_game {
         }
     }
 
+    // Result type for path operations
+    #[derive(Copy, Drop, Serde)]
+    pub enum PathResult {
+        Success: (u32, u32),
+        InvalidPath,
+        IndexOutOfBounds,
+        PathCompleted,
+    }
+
     #[generate_trait]
     pub impl PathSystemImpl of PathSystemTrait {
         /// Returns the (x, y) coordinates for the given path_id and step index
-        fn get_path_step(path_id: u64, index: u32) -> (u32, u32) {
-            // Predefined paths
+        fn get_path_step(path_id: u64, index: u32) -> Option<(u32, u32)> {
+            // Validate path_id first
+            let path_data = Self::get_path_data(path_id);
+            match path_data {
+                Option::None => Option::None,
+                Option::Some(steps) => Self::get_step_from_array(steps, index),
+            }
+        }
+
+        /// Returns the (x, y) coordinates for the given path_id and step index with detailed result
+        fn get_path_step_result(path_id: u64, index: u32) -> PathResult {
+            // Validate path_id first
+            let path_data = Self::get_path_data(path_id);
+            match path_data {
+                Option::None => PathResult::InvalidPath,
+                Option::Some(steps) => {
+                    match Self::get_step_from_array(steps, index) {
+                        Option::None => PathResult::IndexOutOfBounds,
+                        Option::Some(coords) => PathResult::Success(coords),
+                    }
+                }
+            }
+        }
+
+        /// Moves an enemy to the next valid step in its path
+        fn advance_enemy_position(ref enemy: Enemy, path_id: u64, current_index: u32) -> Enemy {
+            let next_index = current_index + 1;
+
+            // Check if we've reached the end of the path
+            match Self::is_path_completed_safe(path_id, next_index) {
+                Option::None => {
+                    // Invalid path_id, return enemy unchanged
+                    enemy
+                },
+                Option::Some(is_completed) => {
+                    if is_completed {
+                        // Enemy has completed the path
+                        enemy
+                    } else {
+                        // Get the next position
+                        match Self::get_path_step(path_id, next_index) {
+                            Option::None => {
+                                // Invalid index, return enemy unchanged
+                                enemy
+                            },
+                            Option::Some((next_x, next_y)) => {
+                                EnemySystem::move_to(@enemy, next_x, next_y)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// Checks whether the enemy has reached the last step of its path
+        /// Returns None if path_id is invalid
+        fn is_path_completed_safe(path_id: u64, index: u32) -> Option<bool> {
+            // Get the path length for each predefined path
+            let path_length = match path_id {
+                0 => Option::Some(6_u32), // Path 0 has 6 steps (indices 0-5)
+                1 => Option::Some(7_u32), // Path 1 has 7 steps (indices 0-6)  
+                2 => Option::Some(9_u32), // Path 2 has 9 steps (indices 0-8)
+                _ => Option::None,
+            };
+
+            match path_length {
+                Option::None => Option::None,
+                Option::Some(length) => Option::Some(index >= length),
+            }
+        }
+
+        /// Legacy function for backward compatibility - will panic if path completed
+        fn is_path_completed(path_id: u64, index: u32) -> bool {
+            match Self::is_path_completed_safe(path_id, index) {
+                Option::None => panic!("Invalid path_id"),
+                Option::Some(result) => result,
+            }
+        }
+
+        /// Get path data for a given path_id
+        /// Returns None if path_id is invalid
+        fn get_path_data(path_id: u64) -> Option<Span<(u32, u32)>> {
             match path_id {
                 0 => {
                     // Path 0: Simple straight line from left to right
@@ -225,7 +314,7 @@ pub mod brawl_game {
                         (4_u32, 5_u32),
                         (5_u32, 5_u32) // End at (5, 5)
                     ];
-                    Self::get_step_from_array(path_0_steps.span(), index)
+                    Option::Some(path_0_steps.span())
                 },
                 1 => {
                     // Path 1: L-shaped path
@@ -238,7 +327,7 @@ pub mod brawl_game {
                         (2_u32, 3_u32),
                         (3_u32, 3_u32) // End at (3, 3)
                     ];
-                    Self::get_step_from_array(path_1_steps.span(), index)
+                    Option::Some(path_1_steps.span())
                 },
                 2 => {
                     // Path 2: Zigzag pattern
@@ -253,46 +342,45 @@ pub mod brawl_game {
                         (4_u32, 1_u32),
                         (4_u32, 2_u32) // End
                     ];
-                    Self::get_step_from_array(path_2_steps.span(), index)
+                    Option::Some(path_2_steps.span())
                 },
-                _ => panic!("Invalid path_id"),
+                _ => Option::None,
             }
         }
 
-        /// Moves an enemy to the next valid step in its path
-        /// Returns an updated Enemy with new x, y coordinates
-        fn advance_enemy_position(ref enemy: Enemy, path_id: u64, current_index: u32) -> Enemy {
-            let next_index = current_index + 1;
-
-            // Check if we've reached the end of the path
-            if Self::is_path_completed(path_id, next_index) {
-                // Enemy has completed the path - return current enemy unchanged
-                enemy
+        /// Safe version of get_step_from_array that returns Option
+        fn get_step_from_array(steps: Span<(u32, u32)>, index: u32) -> Option<(u32, u32)> {
+            if index >= steps.len() {
+                Option::None
             } else {
-                // Get the next position
-                let (next_x, next_y) = Self::get_path_step(path_id, next_index);
-
-                EnemySystem::move_to(@enemy, next_x, next_y)
+                Option::Some(*steps.at(index.into()))
             }
         }
 
-        /// Checks whether the enemy has reached the last step of its path
-        fn is_path_completed(path_id: u64, index: u32) -> bool {
-            // Get the path length for each predefined path
-            let path_length = match path_id {
-                0 => 6_u32, // Path 0 has 6 steps (indices 0-5)
-                1 => 7_u32, // Path 1 has 7 steps (indices 0-6)  
-                2 => 9_u32, // Path 2 has 9 steps (indices 0-8)
-                _ => panic!("Invalid path_id"),
-            };
-
-            index >= path_length
+        /// Get the total length of a path
+        fn get_path_length(path_id: u64) -> Option<u32> {
+            match path_id {
+                0 => Option::Some(6_u32),
+                1 => Option::Some(7_u32),
+                2 => Option::Some(9_u32),
+                _ => Option::None,
+            }
         }
 
-        /// Get a step from a Span of coordinates
-        fn get_step_from_array(steps: Span<(u32, u32)>, index: u32) -> (u32, u32) {
-            assert(index < steps.len(), 'Index out of bounds');
-            *steps.at(index.into())
+        /// Validate if a path_id exists
+        fn is_valid_path(path_id: u64) -> bool {
+            match path_id {
+                0 | 1 | 2 => true,
+                _ => false,
+            }
+        }
+
+        /// Validate if an index is valid for a given path
+        fn is_valid_index(path_id: u64, index: u32) -> bool {
+            match Self::get_path_length(path_id) {
+                Option::None => false,
+                Option::Some(length) => index < length,
+            }
         }
     }
 
