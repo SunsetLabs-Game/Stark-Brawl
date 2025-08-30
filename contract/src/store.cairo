@@ -7,7 +7,9 @@ use stark_brawl::models::tower::{errors as TowerErrors, Tower, TowerImpl, Zeroab
 use stark_brawl::models::trap::{Trap, TrapImpl, ZeroableTrapTrait, Vec2};
 use stark_brawl::models::player::{Player, PlayerContract, PlayerImpl};
 use stark_brawl::systems::player::{IPlayerSystemDispatcher, IPlayerSystemDispatcherTrait};
-use stark_brawl::models::wave::{errors as WaveErrors, Wave, WaveImpl, ZeroableWave};
+use stark_brawl::models::wave::{
+    errors as WaveErrors, Wave, WaveImpl, ZeroableWave, WaveTimer, WaveTimerImpl, ZeroableWaveTimer,
+};
 use stark_brawl::models::enemy::{Enemy, EnemyImpl, ZeroableEnemy};
 use stark_brawl::models::statistics::{Statistics, StatisticsImpl, ZeroableStatistics};
 use stark_brawl::models::leaderboard::{
@@ -149,20 +151,44 @@ pub impl StoreImpl of StoreTrait {
     }
 
     #[inline]
-    fn start_wave(ref self: Store, wave_id: u64, current_tick: u64) {
+    fn start_wave(ref self: Store, wave_id: u64) {
         let mut wave = self.read_wave(wave_id);
         assert(wave.is_active == false, WaveErrors::AlreadyActive);
         assert(wave.is_completed == false, WaveErrors::AlreadyCompleted);
-        let started_wave = WaveImpl::start(@wave, current_tick);
+
+        // Create wave timer for secure timing validation
+        let wave_timer = WaveTimerImpl::new(wave_id);
+        self.write_wave_timer(@wave_timer);
+
+        let started_wave = WaveImpl::start(@wave);
         self.write_wave(@started_wave)
     }
 
     #[inline]
-    fn register_enemy_spawn(ref self: Store, wave_id: u64, current_tick: u64) {
+    fn register_enemy_spawn(ref self: Store, wave_id: u64) {
         let wave = self.read_wave(wave_id);
-        assert(WaveImpl::should_spawn(@wave, current_tick) == true, WaveErrors::InvalidSpawnTick);
-        let spawned_wave = WaveImpl::register_spawn(@wave, current_tick);
+        assert(WaveImpl::should_spawn(@wave) == true, WaveErrors::InvalidSpawnTick);
+
+        // Validate timing through wave timer
+        let mut wave_timer = self.read_wave_timer(wave_id);
+        let current_timestamp = WaveImpl::get_current_timestamp();
+        let updated_timer = WaveTimerImpl::update_timestamp(@wave_timer, current_timestamp);
+        self.write_wave_timer(@updated_timer);
+
+        let spawned_wave = WaveImpl::register_spawn(@wave);
         self.write_wave(@spawned_wave)
+    }
+
+    #[inline]
+    fn read_wave_timer(self: @Store, wave_id: u64) -> WaveTimer {
+        let timer: WaveTimer = self.world.read_model(wave_id);
+        assert(timer.is_non_zero(), 'Wave timer not found');
+        timer
+    }
+
+    #[inline]
+    fn write_wave_timer(ref self: Store, timer: @WaveTimer) {
+        self.world.write_model(timer);
     }
 
     #[inline]

@@ -159,10 +159,7 @@ mod tests {
 
         assert(coins.add_coins(max_minus_one), 'Should add MAX-1');
         assert(coins.add_coins(one), 'Should add 1');
-        assert(
-            coins.amount == 18446744073709551615_u64,
-            'Balance should equal u64 MAX'
-        );
+        assert(coins.amount == 18446744073709551615_u64, 'Balance should equal u64 MAX');
     }
 
     #[test]

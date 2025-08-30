@@ -155,10 +155,7 @@ mod tests {
 
         assert(gems.add_gems(max_minus_one), 'Should add MAX-1');
         assert(gems.add_gems(one), 'Should add 1');
-        assert(
-            gems.amount == 18446744073709551615_u64,
-            'Balance should equal u64 MAX'
-        );
+        assert(gems.amount == 18446744073709551615_u64, 'Balance should equal u64 MAX');
     }
 
     #[test]
