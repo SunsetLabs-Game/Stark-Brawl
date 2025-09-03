@@ -15,39 +15,33 @@ mod path_system_tests {
 
     #[test]
     fn test_get_path_step_valid_paths() {
-        // Test Path 0 (straight line)
-        let (x, y) = PathSystemImpl::get_path_step(0_u64, 0_u32);
-        assert!(x == 0_u32 && y == 5_u32, "Path 0 start incorrect");
+        let coords = PathSystemImpl::get_path_step(0_u64, 0_u32);
+        assert!(coords == Option::Some((0_u32, 5_u32)), "Path 0 start incorrect");
 
-        let (x, y) = PathSystemImpl::get_path_step(0_u64, 5_u32);
-        assert!(x == 5_u32 && y == 5_u32, "Path 0 end incorrect");
+        let coords = PathSystemImpl::get_path_step(0_u64, 5_u32);
+        assert!(coords == Option::Some((5_u32, 5_u32)), "Path 0 end incorrect");
 
-        // Test Path 1 (L-shaped)
-        let (x, y) = PathSystemImpl::get_path_step(1_u64, 0_u32);
-        assert!(x == 0_u32 && y == 0_u32, "Path 1 start incorrect");
+        let coords = PathSystemImpl::get_path_step(1_u64, 0_u32);
+        assert!(coords == Option::Some((0_u32, 0_u32)), "Path 1 start incorrect");
 
-        let (x, y) = PathSystemImpl::get_path_step(1_u64, 6_u32);
-        assert!(x == 3_u32 && y == 3_u32, "Path 1 end incorrect");
+        let coords = PathSystemImpl::get_path_step(1_u64, 6_u32);
+        assert!(coords == Option::Some((3_u32, 3_u32)), "Path 1 end incorrect");
 
-        // Test Path 2 (zigzag)
-        let (x, y) = PathSystemImpl::get_path_step(2_u64, 0_u32);
-        assert!(x == 0_u32 && y == 2_u32, "Path 2 start incorrect");
+        let coords = PathSystemImpl::get_path_step(2_u64, 0_u32);
+        assert!(coords == Option::Some((0_u32, 2_u32)), "Path 2 start incorrect");
 
-        let (x, y) = PathSystemImpl::get_path_step(2_u64, 8_u32);
-        assert!(x == 4_u32 && y == 2_u32, "Path 2 end incorrect");
+        let coords = PathSystemImpl::get_path_step(2_u64, 8_u32);
+        assert!(coords == Option::Some((4_u32, 2_u32)), "Path 2 end incorrect");
     }
 
     #[test]
-    #[should_panic]
     fn test_get_path_step_invalid_path() {
-        let _ = PathSystemImpl::get_path_step(99_u64, 0_u32);
+        assert_eq!(PathSystemImpl::get_path_step(invalid_path, idx), Option::None);
     }
 
     #[test]
-    #[should_panic]
     fn test_get_path_step_index_out_of_bounds() {
-        // Path 0 only has indices 0-5, so index 6 should panic
-        let _ = PathSystemImpl::get_path_step(0_u64, 6_u32);
+        assert_eq!(PathSystemImpl::get_path_step(invalid_path, idx), Option::None);
     }
 
     #[test]
@@ -88,9 +82,11 @@ mod path_system_tests {
     }
 
     #[test]
-    #[should_panic]
-    fn test_is_path_completed_invalid_path() {
-        let _ = PathSystemImpl::is_path_completed(99_u64, 0_u32);
+    fn test_is_path_completed_invalid_path_returns_true() {
+        assert!(
+            PathSystemImpl::is_path_completed(99_u64, 0_u32),
+            "Invalid path IDs should be treated as completed"
+        );
     }
 
     #[test]
