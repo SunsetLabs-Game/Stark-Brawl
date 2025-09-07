@@ -27,6 +27,22 @@ pub enum PlayerStatus {
     Waiting,
 }
 
+// Error constants
+const INVALID_AMOUNT: felt252 = 'Invalid amount';
+const INVALID_ENEMY_ID: felt252 = 'Invalid enemy id';
+const INVALID_ABILITY_ID: felt252 = 'Invalid ability id';
+const INVALID_ITEM_ID: felt252 = 'Invalid item id';
+const INVALID_TARGET: felt252 = 'Invalid target';
+const PLAYER_NOT_FOUND: felt252 = 'Player not found';
+const ABILITY_NOT_FOUND: felt252 = 'Ability not found';
+const NOT_ENOUGH_MANA: felt252 = 'Not enough mana';
+const ABILITY_NOT_EQUIPPED: felt252 = 'Ability not equipped';
+const ABILITY_ON_COOLDOWN: felt252 = 'Ability on cooldown';
+const PLAYER_DEAD: felt252 = 'Player is dead';
+const ENEMY_DEAD: felt252 = 'Enemy is dead';
+const INVALID_PATH_ID: felt252 = 'Invalid path id';
+const INDEX_OUT_OF_BOUNDS: felt252 = 'Index out of bounds';
+const ITEM_NOT_IN_INVENTORY: felt252 = 'Item not in inventory';
 
 #[dojo::contract]
 pub mod brawl_game {
@@ -80,11 +96,11 @@ pub mod brawl_game {
 
             // Check if the player exists
             let player: Player = world.read_model(caller);
-            assert(!player.is_zero(), 'Player does not exist');
+            assert(!player.is_zero(), PLAYER_NOT_FOUND);
 
             // Check if the ability exists
             let ability: Ability = world.read_model(ability_id);
-            assert(ability.is_non_zero(), 'Ability not found');
+            assert(ability.is_non_zero(), ABILITY_NOT_FOUND);
 
             // Gather validation data
             let player_level = player.level;
@@ -100,10 +116,10 @@ pub mod brawl_game {
             ability.validate(player_level, player_mana);
 
             // Additional validations
-            assert(is_player_alive, 'Player not alive');
-            assert(is_ability_equipped, 'Ability not equipped');
-            assert(current_timestamp >= cooldown_until, 'Ability on cooldown');
-            assert(is_target_valid, 'Invalid target');
+            assert(is_player_alive, PLAYER_DEAD);
+            assert(is_ability_equipped, ABILITY_NOT_EQUIPPED);
+            assert(current_timestamp >= cooldown_until, ABILITY_ON_COOLDOWN);
+            assert(is_target_valid, INVALID_TARGET);
 
             // Create usage context
             let context = AbilityUsageContext {
@@ -136,13 +152,16 @@ pub mod brawl_game {
         }
 
         fn take_damage(ref self: ContractState, amount: u32) {
-            // let mut world = self.world_default();
-            let player_system_dispatcher = self.player_system_dispatcher();
+            assert(amount > 0, INVALID_AMOUNT);
+            let amount_u16: u16 = amount.try_into().expect(INVALID_AMOUNT);
 
-            player_system_dispatcher.take_damage(get_caller_address(), amount.try_into().unwrap());
+            let player_system_dispatcher = self.player_system_dispatcher();
+            player_system_dispatcher.take_damage(get_caller_address(), amount_u16);
         }
 
         fn attack_enemy(ref self: ContractState, enemy_id: u64, damage: u32) {
+            assert(damage > 0, INVALID_AMOUNT);
+
             let caller = get_caller_address();
             let world = self.world_default();
 
@@ -151,9 +170,8 @@ pub mod brawl_game {
 
             // Read the current state of the enemy
             let enemy: Enemy = store.read_enemy(enemy_id);
-
-            // CHECK to ensure we're not attacking a dead enemy
-            assert(enemy.is_alive, 'Enemy is already dead');
+            assert(enemy.id == enemy_id, INVALID_ENEMY_ID);
+            assert(enemy.is_alive, ENEMY_DEAD);
 
             // Apply damage to the enemy
             let damaged_enemy = EnemySystem::take_damage(@enemy, damage);
@@ -188,6 +206,9 @@ pub mod brawl_game {
 
             let mut inventory: Inventory = world.read_model(caller);
             let item: Item = world.read_model(item_id);
+            assert(item.id == item_id, INVALID_ITEM_ID);
+            assert(inventory.has_item(item_id), ITEM_NOT_IN_INVENTORY);
+
             let player_system_dispatcher = self.player_system_dispatcher();
 
             match item.item_type {
@@ -210,6 +231,9 @@ pub mod brawl_game {
             mana_cost: u8,
             level_required: u8,
         ) -> u256 {
+            assert(ability_id != 0, INVALID_ABILITY_ID);
+            assert(power > 0, INVALID_AMOUNT);
+
             let mut world = self.world_default();
 
             let ability = Ability {
@@ -268,7 +292,7 @@ pub mod brawl_game {
                     ];
                     Self::get_step_from_array(path_2_steps.span(), index)
                 },
-                _ => panic!("Invalid path_id"),
+                _ => panic(INVALID_PATH_ID),
             }
         }
 
@@ -296,7 +320,7 @@ pub mod brawl_game {
                 0 => 6_u32, // Path 0 has 6 steps (indices 0-5)
                 1 => 7_u32, // Path 1 has 7 steps (indices 0-6)  
                 2 => 9_u32, // Path 2 has 9 steps (indices 0-8)
-                _ => panic!("Invalid path_id"),
+                _ => panic(INVALID_PATH_ID),
             };
 
             index >= path_length
@@ -304,7 +328,7 @@ pub mod brawl_game {
 
         /// Get a step from a Span of coordinates
         fn get_step_from_array(steps: Span<(u32, u32)>, index: u32) -> (u32, u32) {
-            assert(index < steps.len(), 'Index out of bounds');
+            assert(index < steps.len(), INDEX_OUT_OF_BOUNDS);
             *steps.at(index.into())
         }
     }
@@ -346,23 +370,23 @@ pub mod brawl_game {
 
             match effect_type {
                 AbilityEffectType::Damage => {
-                    let damage_amount: u16 = effect_amount.try_into().unwrap();
+                    let damage_amount: u16 = effect_amount.try_into().expect(INVALID_AMOUNT);
                     player_system_dispatcher.take_damage(target, damage_amount);
                 },
                 AbilityEffectType::Heal => {
-                    let heal_amount: u16 = effect_amount.try_into().unwrap();
+                    let heal_amount: u16 = effect_amount.try_into().expect(INVALID_AMOUNT);
                     player_system_dispatcher.heal(target, heal_amount);
                 },
                 AbilityEffectType::Shield => {
-                    let boost_amount: u16 = effect_amount.try_into().unwrap();
+                    let boost_amount: u16 = effect_amount.try_into().expect(INVALID_AMOUNT);
                     player_system_dispatcher.upgrade_max_hp(target, boost_amount);
                 },
                 AbilityEffectType::ManaRestore => {
-                    let mana_amount: u8 = effect_amount.try_into().unwrap();
+                    let mana_amount: u8 = effect_amount.try_into().expect(INVALID_AMOUNT);
                     player_system_dispatcher.regenerate_mana(target, mana_amount);
                 },
                 AbilityEffectType::DamageOverTime => {
-                    let damage_amount: u16 = effect_amount.try_into().unwrap();
+                    let damage_amount: u16 = effect_amount.try_into().expect(INVALID_AMOUNT);
                     player_system_dispatcher.take_damage(target, damage_amount);
                 },
             }
